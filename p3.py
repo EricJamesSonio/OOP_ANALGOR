@@ -12,6 +12,7 @@ class StockAlertSystem(Observer):
     def update(self, message):
         if message["action"] == "new_item":
             item = message["item"]
+            quantity = message["quantity"]
             return f"Notification! New item : {item} with qtty : {quantity} was added to our Stock!"
         elif message["action"] == "add_stock":
             item = message["item"]
@@ -66,13 +67,13 @@ class StockManager:
                 self.notify(item)
                 return
         self.items.append(item)
-        self.notify({"action": "add_item", "item": item, "quantity": quantity})
+        self.notify({"action": "new_item", "item": item, "quantity": quantity})
 
     def add_stock(self, code, quantity):
         for item in self.items:
             if item.code == code:
                 item.quantity += quantity
-                self.notify({"action": "new_item", "item": code, "quantity": quantity})
+                self.notify({"action": "add_stock", "item": code, "quantity": quantity})
                 return
         return f"Item with code : {code} does'nt exist"
 
