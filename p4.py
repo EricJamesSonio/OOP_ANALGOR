@@ -74,26 +74,21 @@ class StockManager:
 def main():
     stock = StockManager()
 
-    # Attach observers
     logger = Logger()
     alert = AlertSystem()
     stock.add_observer(logger)
     stock.add_observer(alert)
 
-    # Add new items
     screw = Screw("Screw", 101, 1.5, 0)
     hammer = Hammer("Hammer", 102, 8.0, 0)
 
     stock.add_item(screw, 100)
     stock.add_item(hammer, 50)
 
-    # Add more stock to existing item
     stock.add_item(screw, 50)
 
-    # Display inventory
     stock.display()
 
 
-# Run the main function
 if __name__ == "__main__":
     main()
