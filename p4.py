@@ -64,7 +64,9 @@ class StockManager:
 
     def notify(self, message):
         for obs in self.observers:
-            obs.update(message)
+            response = obs.update(message)
+            if response:
+                print(response)
 
     def display(self):
         for item in self.items:
