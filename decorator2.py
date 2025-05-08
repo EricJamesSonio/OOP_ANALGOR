@@ -59,7 +59,7 @@ class Milk(DrinkDecorator):
 
 class WhippedCream(DrinkDecorator):
     def get_details(self):
-        return self._drink.get_details() + ". WhippedCream "
+        return self._drink.get_details() + "+ WhippedCream "
 
     def price(self):
         return self._drink.price() + 20
@@ -67,7 +67,7 @@ class WhippedCream(DrinkDecorator):
 
 class Sugar(DrinkDecorator):
     def get_details(self):
-        return self._drink.get_details() + ". Sugar "
+        return self._drink.get_details() + "+ Sugar "
 
     def price(self):
         return self._drink.price() + 10
@@ -75,7 +75,7 @@ class Sugar(DrinkDecorator):
 
 class ChocolateSyrup(DrinkDecorator):
     def get_details(self):
-        return self._drink.get_details() + ". ChocolateSyrup "
+        return self._drink.get_details() + "+ ChocolateSyrup "
 
     def price(self):
         return self._drink.price() + 30
@@ -88,3 +88,4 @@ coffee = ChocolateSyrup(coffee)
 print(coffee.price())
 coffee = Sugar(coffee)
 print(coffee.price())
+print(coffee.get_details())
