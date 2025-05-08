@@ -60,7 +60,7 @@ class FireSword(WarriorDecorator):
         return self._warrior.get_details() + " + FireSword (Equipped)"
 
     def damage_power(self):
-        return self._warrior.damage() + 25
+        return self._warrior.damage + 25
 
 
 class IceArrow(WarriorDecorator):
@@ -69,7 +69,7 @@ class IceArrow(WarriorDecorator):
         return self._warrior.get_details() + " + IceArrow (Equipped)"
 
     def damage_power(self):
-        return self._warrior.damage() + 30
+        return self._warrior.damage + 30
 
 
 class MagicStaff(WarriorDecorator):
@@ -78,7 +78,7 @@ class MagicStaff(WarriorDecorator):
         return self._warrior.get_details() + " + MagicStaff (Equipped)"
 
     def damage_power(self):
-        return self._warrior.damage() + 50
+        return self._warrior.damage + 50
 
 
 class AttackStrategy(ABC):
