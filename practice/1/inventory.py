@@ -40,6 +40,14 @@ class Inventory:
         product = self.find_item(code)
         if product and product.quantity > quantity:
             product.quantity -= quantity
+            self.notify(
+                {
+                    "action": "removed_stock",
+                    "item": product,
+                    "quantity": product.quantity,
+                    "removed": quantity,
+                }
+            )
         elif product and product.quantity == quantity:
             self.remove_item(product.code)
         else:
@@ -55,7 +63,7 @@ class Inventory:
 
     def notify(self, message):
         for observer in self.observers:
-            observer.update()
+            observer.update(message)
 
 
 class InventoryViewer:
@@ -112,6 +120,11 @@ class StockAlertSystem(Observer):
             item = message["item"]
             quantity = message["quantity"]
             new = f"Added Stock For ! {item.name} + Qtty : {quantity} !"
+            return self.records.append(new)
+        elif message["action"] == "removed_stock":
+            item = message["item"]
+            quantity = message["quantity"]
+            new = f"Reduced Stock For ! {item.name} - Qtty : {quantity} !"
             return self.records.append(new)
         else:
             return

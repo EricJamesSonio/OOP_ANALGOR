@@ -30,6 +30,13 @@ class Inventory:
             )
         else:
             return "Doesn't Exist"
+        
+    def update_stock(self, item, quantity: int):
+        product = self.find_item(item.code)
+        if product:
+            product.update_stock(quantity)
+        else:
+            print(f"Product {item.name} not found.")
 
     def add_observer(self, observer: "Observer"):
         self.observer.append(observer)
@@ -38,12 +45,18 @@ class Inventory:
         for observer in self.observer:
             observer.update(message)
 
+class InventoryViewer:
+    def __init__(self, inventory : Inventory):
+        self.inventory = inventory
+        
+    def display(self):
+        for items in self.inventory.items:
+            print(items.get_details())
 
 class Observer(ABC):
     @abstractmethod
     def update(self, message):
         pass
-
 
 class Manager(Observer):
     def __init__(self):
