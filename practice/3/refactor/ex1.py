@@ -52,7 +52,7 @@ class Member(ABC):
 
     @abstractmethod
     def request_return(self, item, cashier: "Cashier"):
-        request = f"Requesting return {item.name}"
+        request = {"name": self.name, "id": self.id, "item": {item}}
         cashier.get_request(request)
 
     @abstractmethod
@@ -310,8 +310,23 @@ class Cashier:
         request_no = self.request_no + 1
         self.request_no += 1
         self.requests.append(
-            {"Number": request_no, "id": message["customer"], "message": message}
+            {
+                "Number": request_no,
+                "name": message["name"],
+                "id": message["id"],
+                "message": message,
+            }
         )
+
+    def find_request(self, no):
+        for req in self.requests:
+            if req["id"] == no:
+                self.approve_return(req["item"], req["id"])
+
+    def choose_request(self):
+        print("< -- Request -- >")
+        self.display_requests()
+        choice = input("Enter Request No : ")
 
     def approve_return(self, item, customer: Member):
         self.store.add_item(item)
@@ -319,6 +334,9 @@ class Cashier:
 
     def display_requests(self):
         self.requestviewer.display_requests()
+
+    def display_customers(self):
+        self.customerrecords.display_customers()
 
 
 class RequestViewer:
@@ -335,6 +353,8 @@ class CustomerRecords:
 
     def __init__(self):
         self.customers: List["Member"] = []
+        self.observer = LogogerCustomer()
+        self.observerviewer = Observerviewer(self.observer)
 
     def find_customer(self, id):
         for customer in self.customers:
@@ -346,6 +366,16 @@ class CustomerRecords:
         CustomerRecords.customer_counter += 1
         customer.customer_no = CustomerRecords.customer_counter
         self.customers.append(customer)
+        self.observer.update(
+            {
+                "action": "add_customer",
+                "customer_no": customer.customer_no,
+                "name": customer.name,
+            }
+        )
+
+    def display_customers(self):
+        self.observerviewer.display_records()
 
 
 # ------------- Orderprocessor -------------- #
@@ -364,7 +394,7 @@ class OrderProcessor:
             self.orderhistory.orderrecords.append(receipt)
             return receipt
         else:
-            return None
+            return "Insufficient Balance"
 
 
 class OrderHistory:
@@ -470,6 +500,15 @@ class SMS(Email):
 class InApp(Email):
     def update(self, message):
         return super().update(message)
+
+
+class Observerviewer:
+    def __init__(self, observer: Observer):
+        self.observer = observer
+
+    def display_records(self):
+        for record in self.observer.records:
+            print(record)
 
 
 # ------------- Store -------------- #
