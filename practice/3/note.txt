@@ -1,0 +1,55 @@
+Applying OOP and SRP
+
+class Product --> Abstract class (inheritance)
+[info] acts as the base class for child class
+--> class DigitalProduct
+--> class PhysicalProduct
+
+class Inventory (storage of the items)
+[viewer] = class InventoryViewer 
+add item, remove item, find item, update stock(when customer gets the item), add observer
+notify (update the observer)
+
+class InventoryViewer
+[info] -- for viewing the inventory 
+
+class Observer
+--> class Logger
+--> class StockAlertSystem
+[viewer] = class RecordViewer(observer)
+
+class Store
+[info] - Acts as the big controller of functions 
+[composition] = inventory, observer, etc
+
+class Customer
+[info] - Acts as the big controller of functions
+[composition] = cart, checkout
+controls using the cart functions
+having checkout and paying
+
+class Receipt
+[info] - Acts as a generator of receipt only
+-- Buiding the receipt for after processing order
+
+class Cart
+[info] - Acts as the container of items and havign functions Add tocart, remove from cart, display etc.
+add to cart -- create a clone of that item for safe updating (update quantity)
+remove from cart 
+display cart
+update quantity -- if customer chagnes mind and wants to change quantity (update also the inventory)
+
+class Discount
+--> class PWDDiscount 10 %
+--> class Nodiscount (no discount at all)
+--> class SeniorDiscount 15 %
+
+class Payment
+--> class Cash 
+--> class CreditCArd + 0.10% 
+
+class Orderprocessor
+[info] - process the order by the customer's cart 
+[checking] - discounts, payment choice
+generating a receipt after calculating
+
