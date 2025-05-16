@@ -32,30 +32,25 @@ class EnglishBook(Book):
 
 
 # ------------- Member -------------- #
-
-
-class Member(ABC):
+class Member:
     def __init__(self, name, id, email, payment: "Payment"):
         self.name = name
         self.id = id
         self.books: List[Book] = []
-        self.cart = Cart()
+        self.cart = None
         self.email = email
-        self.wallet = Wallet()
+        self.wallet = Wallet(self)
         self.payment = payment
         self.discount = None
         self.observer = Email()
-
-    @abstractmethod
+    
     def rent_book(self, item, quantity):
         self.cart.add_to_cart(item, quantity)
 
-    @abstractmethod
     def request_return(self, item, cashier: "Cashier"):
-        request = {"name": self.name, "id": self.id, "item": {item}}
+        request = {"name": self.name, "id": self.id, "item": item}
         cashier.get_request(request)
 
-    @abstractmethod
     def return_book(self, code, cashier: "Cashier"):
         for book in self.books:
             if book.code == code:
@@ -68,23 +63,31 @@ class Member(ABC):
                 return
         return None
 
-    @abstractmethod
     def cash_in(self, amount):
         self.wallet.cash_in(amount)
 
-    @abstractmethod
     def display_balance(self):
         self.wallet.display_balance()
 
-    @abstractmethod
     def pay(self, amount):
         self.payment.pay(amount)
+        
+    def start_shopping(self):
+        self.cart = self.store.borrow_cart(self.id)
+        if self.cart:
+            print(f"Cart #{self.cart.cart_id} assigned to member {self.id}")
+
+    def finish_shopping(self):
+        if self.cart:
+            self.store.return_cart(self.id)
+            self.cart = None
 
 
 class Cart:
-    def __init__(self, store: "BookStore"):
+    def __init__(self, store: "BookStore", cart_id):
         self.store = store
         self.items: list[Book] = []
+        self.cart_id = cart_id
 
     def add_to_cart(self, item, quantity):
         product = self.store.inventory.find_item(item.code)
@@ -104,7 +107,7 @@ class Cart:
             return None
 
     def change_quantity(self, code, quantity):
-        product = self.store.inventory.update_stock(code)
+        product = self.store.inventory.find_item(code)
         if product and product.quantity > quantity:
             diff = product.quantity - quantity
             product.quantity -= diff
@@ -115,6 +118,9 @@ class Cart:
             self.store.inventory.update_stock(product.code, -diff)
         else:
             return None
+    
+    def clear_cart(self):
+        self.items.clear()
 
     def display_cart(self):
         for item in self.items:
@@ -255,7 +261,7 @@ class Storage:
         product = self.find_item(code)
         if product:
             previous = product.quantity
-            total = product.quantiy + quantity
+            total = product.quantity + quantity
             product.quantity += quantity
             self.notify(
                 {
@@ -280,6 +286,60 @@ class StorageViewer:
         for item in self.storage.items:
             print(item.get_details())
 
+# ------------- Store -------------- #
+
+
+class BookStore:
+    def __init__(self):
+        self.inventory = Storage()
+        self.inventoryviewer = StorageViewer(self.inventory)
+        self.available_carts = [Cart(self, cart_id) for cart_id in range(100)]
+        self.in_use_cart = {}
+
+    def add_item(self, item):
+        self.inventory.add_book(item)
+
+    def remove_item(self, code):
+        self.inventory.remove_item(code)
+
+    def find_item(self, code):
+        return self.inventory.find_item(code)
+
+    def display_storage(self):
+        self.inventoryviewer.display_storage()
+
+    def rent_book(self, code):
+        book = self.inventory.find_item(code)
+        if book:
+            return book
+        else:
+            return None
+        
+    def borrow_cart(self, member_id):
+        if member_id in self.in_use_cart:
+            return self.in_use_cart[member_id]
+
+        if self.available_carts:
+            cart = self.available_carts.pop()
+            self.in_use_cart[member_id] = cart
+            return cart
+        else:
+            return None
+
+
+    def return_cart(self, member_id):
+        if member_id in self.in_use_cart:
+            cart = self.in_use_cart.pop(member_id)
+            self.available_carts.append(cart)
+            
+class StoreService:
+    def __init__(self, store : BookStore):
+        self.store = store
+        
+    def assign_cart(self, member):
+        self.store.borrow_cart(member.id)
+        
+        
 
 # ------------- Cashier -------------- #
 
@@ -311,22 +371,36 @@ class Cashier:
         self.request_no += 1
         self.requests.append(
             {
-                "Number": request_no,
+                "number": request_no,
                 "name": message["name"],
                 "id": message["id"],
+                "item" : message["item"],
                 "message": message,
             }
         )
 
-    def find_request(self, no):
+    def find_and_approve_request(self, request_no: int):
         for req in self.requests:
-            if req["id"] == no:
-                self.approve_return(req["item"], req["id"])
+            if req["number"] == request_no:
+                customer = self.customerrecords.find_customer(req["id"])
+                if customer:
+                    self.approve_return(req["item"], customer)
+                    self.requests.remove(req)
+                    customer.observer.update({"action" : "approved_return", "item" : req["item"]})
+                    print(f"Request {request_no} approved.")
+                else:
+                    print("Customer not found.")
+                return
+        print("Request not found.")
 
     def choose_request(self):
-        print("< -- Request -- >")
+        print("< -- Return Requests -- >")
         self.display_requests()
-        choice = input("Enter Request No : ")
+        try:
+            choice = int(input("Enter Request No to approve: "))
+            self.find_and_approve_request(choice)
+        except ValueError:
+            print("Invalid input.")
 
     def approve_return(self, item, customer: Member):
         self.store.add_item(item)
@@ -353,7 +427,7 @@ class CustomerRecords:
 
     def __init__(self):
         self.customers: List["Member"] = []
-        self.observer = LogogerCustomer()
+        self.observer = LoggerCustomer()
         self.observerviewer = Observerviewer(self.observer)
 
     def find_customer(self, id):
@@ -386,7 +460,7 @@ class OrderProcessor:
         self.orderhistory = OrderHistory()
 
     def process_order(self, product, wallet: Wallet):
-        if wallet.balance > product.price:
+        if wallet.balance >= product.price:
             total_price = product.price
             change = wallet.balance - total_price
             wallet.balance -= total_price
@@ -402,8 +476,10 @@ class OrderHistory:
         self.orderrecords: List[Receipt] = []
 
     def display_orders(self):
-        for record in self.records:
+        for record in self.orderrecords:
             print(record)
+
+        
 
 
 # ------------- Receipt -------------- #
@@ -423,7 +499,7 @@ class Receipt:
     def __str__(self):
         return (
             f"<--- Receipt --->\n"
-            f"Receipt No   : {self.receipt_id}\n"
+            f"Receipt No   : {self.receipt_no}\n"
             f"Item         : {self.product.title}\n"
             f"Price        : ₱{self.total_price:.2f}\n"
             f"Paid Amount  : ₱{self.payment_amount:.2f}\n"
@@ -460,9 +536,15 @@ class LoggerStorage(Observer):
             return None
 
 
-class LogogerCustomer(Observer):
+class LoggerCustomer(Observer):
     def update(self, message):
-        return super().update(message)
+        if message["action"] == "add_customer":
+            customer_no = message["customer_no"]
+            name = message["name"]
+            record = f"Added Customer : {name} Customer NO : {customer_no}"
+            self.records.append(record)
+        else:
+            return None
 
 
 class StockAlertSystem(Observer):
@@ -490,6 +572,12 @@ class Email(Observer):
             item = message["item"]
             record = f"Returning item : {item.title}"
             self.records.append(record)
+        elif message["action"] == "approved_return":
+            item = message["item"]
+            record = f"Approved Return! Item : {item.name}"
+            self.records.append(record)
+        else:
+            return None
 
 
 class SMS(Email):
@@ -511,29 +599,4 @@ class Observerviewer:
             print(record)
 
 
-# ------------- Store -------------- #
 
-
-class BookStore:
-    def __init__(self):
-        self.inventory = Storage()
-        self.inventoryviewer = StorageViewer(self.inventory)
-
-    def add_item(self, item):
-        self.inventory.add_book(item)
-
-    def remove_item(self, code):
-        self.inventory.remove_item(code)
-
-    def find_item(self, code):
-        return self.inventory.find_item(code)
-
-    def display_storage(self):
-        self.inventoryviewer.display_storage()
-
-    def rent_book(self, code):
-        book = self.inventory.find_item(code)
-        if book:
-            return book
-        else:
-            return None

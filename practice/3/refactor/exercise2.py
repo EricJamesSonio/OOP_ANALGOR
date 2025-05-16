@@ -7,7 +7,7 @@ class Order:
         self.amount = amount
 
     def calculate_shipping(self):
-        return self.order_type.pay(self.amount)
+        return self.order_type.calculate_shipping(self.amount)
 
     def total_amount(self):
         return self.amount + self.calculate_shipping()
