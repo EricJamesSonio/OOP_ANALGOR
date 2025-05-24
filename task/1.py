@@ -4,12 +4,13 @@ from datetime import datetime
 
 
 class Product:
-    def __init__(self, name, code, price, quantity, supplier):
+    def __init__(self, name, code, price, quantity, supplier, unit):
         self.name = name
         self.code = code
         self.price = price
         self.quantity = quantity
         self.supplier = supplier
+        self.unit = unit
 
     def get_details(self):
         return f"Name : {self.name}, Code : {self.code}, Price : {self.price}, Quantity : {self.quantity}, Supplier : {self.supplier}"
@@ -229,25 +230,10 @@ class ObserverViewer:
         self.observer = observer
 
     def display_records(self):
-        print(f"<--- Observer Type : {type(self.observer).__name__} --")
+        print(f"< -- Observer type : {type(self.observer).__name__} -->")
         if not hasattr(self.observer, "records") or not self.observer.records:
-            print("No display")
+            print("Doesn't have records")
             return
 
-        for idx, record in enumerate(self.observer.records, 1):
-            action = record.get("action", "unknown").upper()
-            item = record.get("item", None)
-            quantity = record.get("quantity")
-            update = record.get("update")
-            total = record.get("total")
-
-            timestamp = record.get(
-                "timestamp", datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-            )
-
-            print(f"[{idx}] [{timestamp}]")
-            print(f"Action : {action}")
-
-            if item:
-                print(f" Item : {item.name} (Code : {item.code})")
-                print(f"Supplier : {getattr(item, "supplier", "N/A")}")
+        for idx, record in enumerate(self.observer.records):
+            print("< Records ---> records")
