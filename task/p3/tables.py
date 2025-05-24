@@ -1,15 +1,30 @@
 from typing import List, Dict
+from cashier import Order
 from inventory import Observer, Logger
 
 
 class Table:
-    def __init__(self, table_no, capacity):
+    def __init__(self, table_no, capacity, order: Order = None):
         self.table_no = table_no
         self.capacity = capacity
         self.is_available = True
+        self.order = None
 
     def __str__(self):
-        return f"Table No : {self.table_no}, Capacity : {self.capacity}, Is Available : {self.is_available}"
+        order_details = ""
+        if self.order:
+            order_details = "\n  ".join(
+                [item.get_details() for item in self.order.orderitem]
+            )
+        else:
+            order_details = "No Orders"
+
+        return (
+            f"Table No: {self.table_no}, "
+            f"Capacity: {self.capacity}, "
+            f"Is Available: {self.is_available}, "
+            f"Order/s:\n  {order_details}"
+        )
 
 
 class Table_Management:
@@ -33,9 +48,15 @@ class Table_Management:
         for table in self.tables.values():
             print(table)
 
-    def reserve_table(self, table_no: int):
+    def assign_table(self, table_no: int):
         if table_no in self.tables and self.tables[table_no].is_available:
             self.tables[table_no].is_available = False
+            self.notify({"action": "assign_table", "table_no": table_no})
+
+    def vacant_table(self, table_no: int):
+        if table_no in self.tables and not self.tables[table_no].is_available:
+            self.tables[table_no].is_available = True
+            self.notify({"action": "vacant_table", "table_no": table_no})
 
     def notify(self, message):
         for observer in self.observers:

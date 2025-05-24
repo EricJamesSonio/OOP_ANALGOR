@@ -1,6 +1,7 @@
 from inventory import Base, Inventory
 from typing import List
 from discount import Discount
+from tables import Table_Management
 import time
 
 
@@ -8,13 +9,29 @@ class Cashier:
     def __init__(self, name, id):
         self.name = name
         self.id = id
+        self.table_access = Table_Management()
+        self.orderprocessor = OrderProcessor()
+
+    def process_order(self, order: "Order", discount: Discount, payment):
+        change = self.orderprocessor.process_order(self, order, discount, payment)
+        print(f"Change : {change}")
+        print("Assign Table")
+        self.table_access.display_table()
+        choice = int(input("Choose Table : "))
+        table = self.table_access.find_table(choice)
+        if table and table.capacity >= order.numguest:
+            self.table_access.assign_table(choice, order)
+            order.table_no = choice
+        else:
+            print("Capacity is not enough!")
+            return
 
 
 class OrderItem:
     def __init__(self, item: Base):
         self.item = item
-        self.price = item.price * self.quantity
         self.quantity = item.quantity
+        self.price = item.price * self.quantity
         self.name = item.name
 
     def get_details(self):
@@ -58,13 +75,15 @@ class OrderProcessor:
             total += item.price
         return total
 
-    def process_order(self, order: Order, discount: Discount, payment, cashier):
+    def process_order(
+        self, cashier: Cashier, order: Order, discount: Discount, payment
+    ):
         total_price = self.calculate_total(order)
         discount_percent = discount.discount_percent()
         discounted_amount = discount_percent * total_price
         if discounted_amount <= payment:
             receipt = Receipt(
-                order, total_price, discounted_amount, change, discount_percent
+                order, total_price, discounted_amount, change, discount_percent, cashier
             )
             Receipt.receipt_counter += 1
             self.orderhistory.append(receipt)
@@ -76,7 +95,13 @@ class Receipt:
     receipt_counter = 0
 
     def __init__(
-        self, order: Order, total_price, discounted_amount, change, discount_percent
+        self,
+        order: Order,
+        total_price,
+        discounted_amount,
+        change,
+        discount_percent,
+        cashier: Cashier,
     ):
         self.order = order
         self.total_price = total_price
@@ -84,6 +109,7 @@ class Receipt:
         self.discount_percent = discount_percent
         self.chagne = change
         self.receipt_no = Receipt.receipt_counter
+        self.cashier = cashier
 
     def generate(self):
         print("<-- Receipt -->")
@@ -97,4 +123,5 @@ class Receipt:
         print(f"Discount % : {self.discount_percent}")
         print(f"Total Payable : {self.discounted_price}")
         print(f"Change : {self.chagne}")
+        print(f"Processed By : {self.cashier.name} : {self.cashier.id}")
         print("Thankyou For buying!")
