@@ -1,5 +1,4 @@
 from product import *
-from abc import ABC, abstractmethod
 from typing import List
 
 
