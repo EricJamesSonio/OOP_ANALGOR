@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
+from datetime import datetime
 
 # ----------- Product Item (Base Form) -------------- #
 
@@ -66,6 +67,24 @@ class Customer(User):
     def __init__(self, name, id):
         super().__init__(name, id)
         self.registered = False
+        self.wallet = 0
+        self.purchase = []
+        
+    def cash_in(self, amount):
+        if amount > 0:
+            self.wallet += amount
+        else:
+            return "Insufficient amount"
+        
+    def withdraw(self, amount):
+        if amount > 0:
+            self.wallet -= amount
+        else:
+            return "Insufficient amount"
+        
+    def display_wallet(self):
+        print(f"Balance : {self.wallet}")
+            
 
 
 class Employee(User, ABC):
@@ -85,6 +104,10 @@ class Cashier(Employee):
         super().__init__(name, id, store)
         self.cashier_no = Cashier._cashier_counter
         Cashier._cashier_counter += 1
+        self.orderprocessor = OrderProcessor()
+        
+    def process_order(self):
+        self.orderprocessor.process_order()
 
     def get_details(self):
         return f" [{self.cashier_no}]. Name : {self.name}, Id : {self.id} , Store : {self.store}"
@@ -328,3 +351,113 @@ class EmployeeViewer:
     def display_emp(self):
         for emp in self.employeemanagement.employees:
             print(emp.get_details())
+            
+
+# ----------- Order Item -------------- #
+
+class OrderItem:
+    def __init__(self, order : ProductItem):
+        self.order = order
+        self.price = order.price
+        self.quantity = order.quantity
+        self.total_price = self.quantity * self.price
+        
+    def get_details(self):
+        return f"Name : {self.order.name}, Price : {self.price}, Quantity : {self.quantity}"
+        
+class Order:
+    def __init__(self):
+        now = datetime.now()
+        self.date = now.date()
+        self.time = now.time()
+        self.orders : List[OrderItem] = []
+        
+    def add_orderitem(self, orderitem : OrderItem):
+        self.orders.append(orderitem)
+        
+    def total_price(self):
+        total = 0
+        for item in self.orders:
+            item.total_price += total
+        return total
+        
+            
+
+
+# ----------- Receipt -------------- #
+
+class Receipt:
+    
+    _receipt_counter = 0
+    def __init__(self, order: Order, total_price, discount_percent, amount_payable, cashier ,change):
+        self.order = order
+        self.total_price = total_price
+        self.orderitems = order.orders
+        self.discount_percent = discount_percent
+        self.amount_payable = amount_payable
+        self.change = change
+        self.cashier = cashier
+        self.receipt_no = Receipt._receipt_counter
+        Receipt._receipt_counter += 1
+        
+    """def create(self):
+        return (
+        f"<----- Receipt ----->"
+        f"Date : {self.order.date}"
+        f"Time : {self.order.time}"
+        f"Receipt No : {self.receipt_no}"
+        f"Processed by : {self.cashier.name}"
+        "-----------------------"
+        f"Items : "
+        for item in self.orderitems:
+            print(item.get_details())
+        "-----------------------"
+        f"Total Price : {self.total_price}"
+        f"Discount Percent : {self.discount_percent}"
+        f"Discounted Price : {self.amount_payable}"
+        f"Change : {self.change}"
+        "Thanks For Coming!")"""
+
+
+
+# ----------- Order Processor -------------- #
+
+class OrderProcessor:
+    def __init__(self):
+        self.order_history = []
+        
+    def process_order(self, order : Order, discount : 'Discountstrategy', customer: Customer,cashier : Cashier):
+        total_price = order.total_price()
+        discount_percent = discount.discount_percent()
+        amount_payable = total_price * discount_percent
+        if customer.wallet >= amount_payable:
+            change = customer.wallet - amount_payable
+            customer.wallet -= amount_payable
+            receipt = Receipt(order, total_price,discount_percent,amount_payable,cashier,change)
+            self.order_history.append(receipt)
+        else:
+            return "Not enought Balance "
+         
+    
+# ----------- Discount Strategy -------------- #
+    
+class Discountstrategy(ABC):
+    @abstractmethod
+    def discount_percent(self):
+        pass
+    
+class PWDDiscount(Discountstrategy):
+    def discount_percent(self):
+        return 0.90
+    
+class SeniorDiscount(Discountstrategy):
+    def discount_percent(self):
+        return 0.85
+
+
+
+        
+        
+
+            
+
