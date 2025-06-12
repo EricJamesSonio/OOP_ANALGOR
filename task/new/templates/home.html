@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UnliWings Menu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fef9f4;
+      color: #333;
+    }
+
+    header {
+      background: #c0392b;
+      padding: 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      padding: 40px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .card h3 {
+      margin: 15px 0 5px;
+      font-size: 1.3rem;
+      color: #e74c3c;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .price {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      color: #2c3e50;
+    }
+
+    footer {
+      background: #c0392b;
+      text-align: center;
+      color: #fff;
+      padding: 15px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🍗 UnliWings Menu</h1>
+  </header>
+
+  <section class="menu">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092" alt="Fried Wings">
+      <h3>Fried Chicken Wings</h3>
+      <p>Golden crispy wings seasoned to perfection.</p>
+      <div class="price">₱150</div>
+    </div>
+
+    <div class="card">
+      <img src="{{ url_for('static', filename='bbqchicken.jpg') }}" alt="BBQ Wings">
+
+
+      <h3>BBQ Chicken Wings</h3>
+      <p>Sweet & smoky barbecue sauce slathered on tender wings.</p>
+      <div class="price">₱180</div>
+    </div>
+
+    <div class="card">
+      <img src="{{ url_for('static', filename='bakedbuffalo.jpg') }}" alt="Buffalo Wings">
+      <h3>Baked Buffalo Wings</h3>
+      <p>Spicy and tangy buffalo sauce on oven-baked wings.</p>
+      <div class="price">₱200</div>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 Rest to Rant | Pandi, Bulacan
+  </footer>
+
+</body>
+</html>
